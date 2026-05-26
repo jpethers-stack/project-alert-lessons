@@ -89,11 +89,11 @@ button:hover{background:linear-gradient(135deg,#9C27B0,#BA68C8);transform:transl
   border-radius:12px;text-decoration:none;font-weight:700;margin-top:12px;font-size:1em}
 
 /* show-of-hands prompts (slide 4) */
-.hands-card{background:linear-gradient(135deg,#fff,#FAF5FF);border-radius:18px;padding:20px 26px;
-  box-shadow:0 7px 20px rgba(106,27,154,.12);position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;
-  font-family:'Fraunces',serif;font-weight:700;color:#4A148C;font-size:1.45em;line-height:1.3}
+.hands-card{background:linear-gradient(135deg,#fff,#FAF5FF);border-radius:16px;padding:14px 22px;
+  box-shadow:0 6px 18px rgba(106,27,154,.12);position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;
+  font-family:'Fraunces',serif;font-weight:700;color:#4A148C;font-size:1.22em;line-height:1.3}
 .hands-card::before{content:"";position:absolute;top:0;left:0;width:8px;height:100%;background:linear-gradient(180deg,#1976D2,#42A5F5)}
-.hands-emoji{font-size:2.2em;line-height:1;flex-shrink:0}
+.hands-emoji{font-size:1.8em;line-height:1;flex-shrink:0}
 
 /* reason / consumption chips */
 .reason-row{display:flex;flex-wrap:wrap;gap:12px}
@@ -289,20 +289,21 @@ button:hover{background:linear-gradient(135deg,#9C27B0,#BA68C8);transform:transl
     <div class="activity-time">~2 min</div>
   </div>
   <h2 style="margin-bottom:2px">First &mdash; Who Do We Know?</h2>
-  <div class="slide-body" style="gap:16px">
-    <p style="color:#5E4B7B;margin:0;font-size:1.25em">The majority of kids your age <strong>don't</strong> use nicotine &mdash; and the majority of adults don't either. But it's possible we each know someone who does.</p>
+  <div class="slide-body" style="gap:13px">
+    <p style="color:#5E4B7B;margin:0;font-size:1.12em">The majority of kids your age <strong>don't</strong> use nicotine &mdash; and the majority of adults don't either. But we might each know someone who does.</p>
     <div class="hands-card"><div class="hands-emoji">&#9995;</div>By show of hands &mdash; does anyone know someone who <strong>uses nicotine?</strong></div>
     <div class="hands-card"><div class="hands-emoji">&#9995;</div>By show of hands &mdash; does anyone know someone who <strong>smokes or vapes nicotine, or uses smokeless tobacco?</strong></div>
     <div>
-      <h3 style="margin:2px 0">Ways nicotine is used <span style="font-size:.62em;color:#7B1FA2;font-weight:600">&mdash; click to reveal as students name them</span></h3>
-      <div class="reason-row">
-        <div class="reason-chip" onclick="this.classList.toggle('shown')"><span class="q">??? </span>&#128684; Cigarette</div>
-        <div class="reason-chip" onclick="this.classList.toggle('shown')"><span class="q">??? </span>&#128168; Vape / e-cigarette</div>
-        <div class="reason-chip" onclick="this.classList.toggle('shown')"><span class="q">??? </span>&#129372; Chewing tobacco</div>
-        <div class="reason-chip" onclick="this.classList.toggle('shown')"><span class="q">??? </span>&#129697; Pouch</div>
+      <h3 style="margin:2px 0">Ways nicotine is used <span style="font-size:.6em;color:#7B1FA2;font-weight:600">&mdash; type students' guesses to reveal</span></h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+        <input id="waysIn" placeholder="Type a way nicotine is used&hellip;" style="flex:1;min-width:280px;font-family:'Fraunces',serif;font-size:1.05em;padding:10px 16px;border-radius:12px;border:2.5px solid #D1C4E9;background:#fff;color:#2D1B4E;outline:none" onkeydown="if(event.key==='Enter')waysGuess()" onfocus="this.style.borderColor='#9C27B0'" onblur="this.style.borderColor='#D1C4E9'">
+        <button onclick="waysGuess()">Check</button>
+        <button onclick="waysRevealNext()" class="btn-secondary">Reveal Next</button>
+        <button onclick="waysReset()" class="btn-danger">Reset</button>
       </div>
+      <div id="waysMsg" style="min-height:18px;font-family:'Fraunces',serif;font-weight:700;font-size:.98em;color:#F9A825"></div>
+      <div class="feud-board" id="waysBoard" style="grid-template-columns:1fr 1fr 1fr 1fr"></div>
     </div>
-    <div class="note"><strong>Lead-in:</strong> If a person is already smoking or vaping nicotine &mdash; <em>why is it so hard for them to stop?</em> Let's find out.</div>
   </div>
 </div>
 
@@ -561,6 +562,32 @@ var IMG_CONFIDENT='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBA
 </div>
 
 <script>
+// Slide 4 — Family Feud: ways nicotine is used
+var waysAns=[
+  {n:1,t:"Cigarette",k:["cigarette","cig"]},
+  {n:2,t:"Vape / e-cigarette",k:["vape","e-cig","ecig","e cig","e-cigarette","e cigarette"]},
+  {n:3,t:"Chewing tobacco",k:["chew","dip","smokeless","spit"]},
+  {n:4,t:"Pouch",k:["pouch","zyn"]}
+];
+var waysShown=new Set();
+function waysDraw(){
+  document.getElementById("waysBoard").innerHTML=waysAns.map(function(a){
+    var s=waysShown.has(a.n);
+    return '<div class="feud-tile '+(s?'shown':'hidden')+'" style="font-size:1.05em;padding:11px 14px"><div class="feud-num" style="width:34px;height:34px;font-size:.95em">'+a.n+'</div><div>'+(s?a.t:'? ? ?')+'</div></div>';
+  }).join("");
+}
+function waysGuess(){
+  var inp=document.getElementById("waysIn"),v=inp.value.toLowerCase().trim(),m=document.getElementById("waysMsg");
+  if(!v)return;
+  var hit=waysAns.find(function(a){return !waysShown.has(a.n)&&a.k.some(function(k){return v.indexOf(k)>=0})});
+  if(hit){waysShown.add(hit.n);m.textContent="\u2705 "+hit.t+"!";m.style.color="#2E7D32"}
+  else{m.textContent="\u274C Not on the board \u2014 try again! (patches, gum, lozenges count too)";m.style.color="#C62828"}
+  inp.value="";waysDraw();
+}
+function waysRevealNext(){var nx=waysAns.find(function(a){return !waysShown.has(a.n)});if(nx){waysShown.add(nx.n);var m=document.getElementById("waysMsg");m.textContent="\uD83D\uDC40 Revealed: "+nx.t;m.style.color="#F9A825";waysDraw()}}
+function waysReset(){waysShown.clear();document.getElementById("waysMsg").textContent="";waysDraw()}
+waysDraw();
+
 // Slide 5 — Family Feud: why it's hard to quit
 var feudAns=[
   {n:1,t:"Peer pressure",k:["peer","pressure"]},
